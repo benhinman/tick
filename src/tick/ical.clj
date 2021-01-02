@@ -392,7 +392,22 @@
        :curr-object
        :subobjects))
 
+(defn event?
+  "Determines whether or not the given map is an event"
+  [{:keys [object]}]
+  (= object "VEVENT"))
+
 (defn events
   "Given a vcalendar object, return only the events"
   [vcalendar]
-  (filter #(= "VEVENT" (:object %)) (:subobjects vcalendar)))
+  (filter event? (:subobjects vcalendar)))
+
+(defn remove-events
+  "Given a vcalendar object, remove events that satisfy pred"
+  [vcalendar pred]
+  (update vcalendar
+          :subobjects
+          (fn [subobjects]
+            (->> subobjects
+                 (remove (every-pred event? pred))
+                 (into (empty subobjects))))))
