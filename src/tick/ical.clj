@@ -96,10 +96,10 @@
       ":"
       value)))
 
-(defrecord Property [prop-name prop-value]
+(defrecord Property [name value]
   IPrintable
   (print-object [_]
-    (print-property prop-name prop-value)))
+    (print-property name value)))
 
 (defrecord VEvent []
   t/ITimeSpan
@@ -149,13 +149,13 @@
   (zone [this] (t/zone (property-value this :dtstart)))
   (zone-offset [this] (t/zone-offset (property-value this :dtstart))))
 
-(defrecord VCalendar [objects]
+(defrecord VCalendar [subobjects]
   ;; TODO: Add t/ITimeSpan
   IPrintable
   (print-object [this]
     (wrap-with
       "VCALENDAR"
-      (doseq [obj objects]
+      (doseq [obj subobjects]
         (print-object obj))))
   ICalendarObject
   (property-values [this prop-name]
@@ -374,9 +374,10 @@
 (defn add-property [acc contentline]
   (update-in
     acc [:curr-object :properties] (fnil conj [])
-    (update contentline
-            :value
-            #(coerce-to-value (get-in contentline [:params "VALUE"]) %))))
+    (map->Property
+      (update contentline
+              :value
+              #(coerce-to-value (get-in contentline [:params "VALUE"]) %)))))
 
 (defmethod add-contentline-to-model :default
   [acc contentline]
